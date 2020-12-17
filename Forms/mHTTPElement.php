@@ -22,11 +22,11 @@ class mHTTPElement
     private $readOnly = false;
 
 
-    public function __construct($name = "", $eleType = "input")
+    public function __construct($name = "", $eleType = "input", $prefix = "form-")
     {
         $this->setEleType($eleType);
         $this->setName($name);
-        $this->setId("form-$name");
+        $this->setId($prefix . $name);
     }
 
     // Drop-down
@@ -132,7 +132,7 @@ class mHTTPElement
             $item = (new FormElement(
                 (new mHTTPElement($this->name))
                     ->setType("radio")
-                    ->setId($this->name. $labelText . $foo)
+                    ->setId($this->name . $labelText . $foo)
                     ->setValue($value)
                     ->setIsRequired($setRequired)
                     ->setIsDisabled($disabled || $optionsDisable)
@@ -304,14 +304,21 @@ class mHTTPElement
         return $this;
     }
 
-    public function setPreset($value) {
+    public function setPreset($value)
+    {
         if ($this->type == "checkbox") {
-            $this->setIsChecked($value == "on" || $value == "true" || $value == true || $value == 1);
-            Utils::consoleLog("checkbox $this->id: $value");
+            $this->setIsChecked($value == "on" || $value == "true" || $value == true || intval($value) == 1);
             return $this;
-        }
-        else {
-            return $this->setValue($value);
+        } else if ($this->type == "radio") {
+            $this->setIsChecked($value == $this->value);
+            return $this;
+        } else {
+            $this->setValue($value);
+            foreach ($this->innerElement as $element) {
+                if ($element instanceof FormElement) {
+                    $element->setData($value);
+                }
+            }
         }
     }
 
